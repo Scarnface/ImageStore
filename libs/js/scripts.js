@@ -19,21 +19,23 @@ function getRandomBackground(originIsSubmit) {
 
   // Request the image
   fetch("https://source.unsplash.com/1920x1080/?random").then((response) => {
-    // Create a div to hold the image.
+    // Create a node to append to.
     let item = document.createElement("div");
-    item.classList.add("item");
-    // Add the image to the div.
+    // Add the image to the element.
     item.innerHTML = `<img id="firstImage" class="imageHolder" src="${response.url}" alt="Random Image"/>`;
     currentImageURL = response.url;
 
     // On first call simply add the element to the page.
     if (postLoad == false) {
+      // Append the item to the body.
       document.body.appendChild(item);
       // Toggle first load as having been completed.
       postLoad = true;
       // On subsequent calls remove the previous item before adding the new one.
     } else {
+      // Remove the previous element.
       $(".imageHolder").remove();
+      // Append the item to the body.
       document.body.appendChild(item);
     }
 
@@ -76,8 +78,26 @@ $(document).ready(function () {
     getRandomBackground(originIsSubmit);
   });
 
-  // Validate email and store image under it on submit.
+  // Validate email, store and display image on submit.
   $("#submitEmail").on("click", function () {
     saveToEmail($("#email").val());
+
+    // Clear the div containing stored images.
+    $("#storedImages").empty();
+
+    // Iterate the array of email/image objects.
+    $.each(savedImagesByEmail, function (key, value) {
+      // If the email submitted matches any of the objects saved.
+      if ($("#email").val() == value.email) {
+        var storedImages = document.getElementById("storedImages");
+        // Create a node to append to.
+        var item = document.createElement("div");
+        // Add the image to the element.
+        item.innerHTML =
+          `<img class="storedImageHolder" src="` + value.url + `" alt="Saved Image"/>`;
+        // Append the item to the div.
+        storedImages.appendChild(item);
+      }
+    });
   });
 });
