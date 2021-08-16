@@ -1,28 +1,32 @@
+"use strict";
+
 // Toggles the removal of previous element once the function has been called at least once.
 var postLoad = false;
 // Indicate origin of function call.
-var originIsSubmit = false;
+var origin = "newImage";
 // An array of objects representing submitted emails and the image urls saved to them.
 var savedImagesByEmail = [];
 // The current image url.
 var currentImageURL;
 
 // Get a random image from unsplash and add it to the document as a full screen background.
-function getRandomBackground(originIsSubmit) {
-  if (originIsSubmit == true) {
+function getRandomBackground(origin) {
+  if (origin == "submit") {
     // Provide user feedback that the function is in progress.
     document.getElementById("submitEmail").innerHTML = "...SAVING";
   } else {
     // Provide user feedback that the function is in progress.
     document.getElementById("imageChange").innerHTML = "...LOADING";
-  }
+  } // Request the image
 
-  // Request the image
-  fetch("https://source.unsplash.com/1920x1080/?random").then((response) => {
+  fetch("https://source.unsplash.com/1920x1080/?random").then(function (response) {
     // Create a node to append to.
-    let item = document.createElement("div");
+    var item = document.createElement("div");
     // Add the image to the element.
-    item.innerHTML = `<img id="firstImage" class="imageHolder" src="${response.url}" alt="Random Image"/>`;
+    item.innerHTML = '<img id="firstImage" class="imageHolder" src="'.concat(
+      response.url,
+      '" alt="Random Image"/>'
+    );
     currentImageURL = response.url;
 
     // On first call simply add the element to the page.
@@ -39,7 +43,7 @@ function getRandomBackground(originIsSubmit) {
       document.body.appendChild(item);
     }
 
-    if (originIsSubmit == true) {
+    if (origin == "submit") {
       // Reset the submit buttons text.
       document.getElementById("submitEmail").innerHTML = "SUBMIT";
     } else {
@@ -53,14 +57,18 @@ function getRandomBackground(originIsSubmit) {
 function saveToEmail(inputText) {
   // email REGEX.
   var mailFormat = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
+
   // Validate user input against REGEX.
   if (inputText.match(mailFormat)) {
     // Save the image URL with the email address entered.
-    savedImagesByEmail.push({ email: inputText, url: currentImageURL });
+    savedImagesByEmail.push({
+      email: inputText,
+      url: currentImageURL,
+    });
     // Indicate the origin of the function call.
-    originIsSubmit = true;
+    origin = "submit";
     // Then load another image.
-    getRandomBackground(originIsSubmit);
+    getRandomBackground(origin);
   } else {
     // If validation fails, alert the user.
     alert("Please enter a valid email address");
@@ -69,13 +77,13 @@ function saveToEmail(inputText) {
 
 $(document).ready(function () {
   // Get first image on load.
-  getRandomBackground(originIsSubmit);
+  getRandomBackground(origin);
 
   // Get new image on request.
   $("#imageChange").on("click", function () {
     // Indicate the origin of the function call.
-    originIsSubmit = false;
-    getRandomBackground(originIsSubmit);
+    origin = "newImage";
+    getRandomBackground(origin);
   });
 
   // Validate email, store and display image on submit.
@@ -94,7 +102,7 @@ $(document).ready(function () {
         var item = document.createElement("div");
         // Add the image to the element.
         item.innerHTML =
-          `<img class="storedImageHolder" src="` + value.url + `" alt="Saved Image"/>`;
+          '<img class="storedImageHolder" src="' + value.url + '" alt="Saved Image"/>';
         // Append the item to the div.
         storedImages.appendChild(item);
       }
