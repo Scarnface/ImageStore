@@ -1,33 +1,34 @@
 "use strict";
 
+// Unsplash API URL.
+const APIURL = "https://api.unsplash.com/photos/";
+// Unsplash key.
+const accessKey = "6spnP3stgRYCnqFdO_LZqsoHh2AhnH3Z0XlZkKosENE";
 // Toggles the removal of previous element once the function has been called at least once.
 var postLoad = false;
-// Indicate origin of function call.
-var origin = "newImage";
 // An array of objects representing submitted emails and the image urls saved to them.
 var savedImagesByEmail = [];
 // The current image url.
 var currentImageURL;
+// The current image alt text.
+var currentImageAlt;
 
-// Get a random image from unsplash and add it to the document as a full screen background.
-function getRandomBackground(origin) {
-  if (origin == "submit") {
-    // Provide user feedback that the function is in progress.
-    document.getElementById("submitEmail").innerHTML = "...SAVING";
-  } else {
-    // Provide user feedback that the function is in progress.
-    document.getElementById("imageChange").innerHTML = "...LOADING";
-  } // Request the image
-
-  fetch("https://source.unsplash.com/1920x1080/?random").then(function (response) {
+// Get a random image from unsplash.
+function getRandomBackground() {
+  // Request a random landscape orientation image.
+  axios.get(APIURL + "random/?client_id=" + accessKey + "&orientation=landscape").then(function (response) {
+    // Save the images alt text.
+    var imageAlt = response.data.alt_description;
+    // Update the current image alt text for storage.
+    currentImageAlt = imageAlt;
+    // Save the direct image URL.
+    var URL = response.data.urls.regular;
+    // Update the current image URL variable for storage.
+    currentImageURL = URL;
     // Create a node to append to.
     var item = document.createElement("div");
     // Add the image to the element.
-    item.innerHTML = '<img id="firstImage" class="imageHolder" src="'.concat(
-      response.url,
-      '" alt="Random Image"/>'
-    );
-    currentImageURL = response.url;
+    item.innerHTML = '<img id="firstImage" class="imageHolder" src="' + URL + ' alt="' + imageAlt + '"/>';
 
     // On first call simply add the element to the page.
     if (postLoad == false) {
@@ -41,14 +42,6 @@ function getRandomBackground(origin) {
       $(".imageHolder").remove();
       // Append the item to the body.
       document.body.appendChild(item);
-    }
-
-    if (origin == "submit") {
-      // Reset the submit buttons text.
-      document.getElementById("submitEmail").innerHTML = "SUBMIT";
-    } else {
-      // Reset the image request buttons text.
-      document.getElementById("imageChange").innerHTML = "GET NEW IMAGE";
     }
   });
 }
@@ -65,10 +58,8 @@ function saveToEmail(inputText) {
       email: inputText,
       url: currentImageURL,
     });
-    // Indicate the origin of the function call.
-    origin = "submit";
     // Then load another image.
-    getRandomBackground(origin);
+    getRandomBackground();
   } else {
     // If validation fails, alert the user.
     alert("Please enter a valid email address");
@@ -77,13 +68,11 @@ function saveToEmail(inputText) {
 
 $(document).ready(function () {
   // Get first image on load.
-  getRandomBackground(origin);
+  getRandomBackground();
 
   // Get new image on request.
   $("#imageChange").on("click", function () {
-    // Indicate the origin of the function call.
-    origin = "newImage";
-    getRandomBackground(origin);
+    getRandomBackground();
   });
 
   // Validate email, store and display image on submit.
@@ -93,7 +82,7 @@ $(document).ready(function () {
     // Clear the div containing stored images.
     $("#storedImages").empty();
 
-    // Iterate the array of email/image objects.
+    // Iterate the array of images.
     $.each(savedImagesByEmail, function (key, value) {
       // If the email submitted matches any of the objects saved.
       if ($("#email").val() == value.email) {
@@ -101,8 +90,7 @@ $(document).ready(function () {
         // Create a node to append to.
         var item = document.createElement("div");
         // Add the image to the element.
-        item.innerHTML =
-          '<img class="storedImageHolder" src="' + value.url + '" alt="Saved Image"/>';
+        item.innerHTML = '<img class="storedImageHolder" src="' + value.url + '" alt="Saved Image"/>';
         // Append the item to the div.
         storedImages.appendChild(item);
       }
